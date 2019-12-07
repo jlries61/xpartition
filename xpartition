@@ -1,0 +1,100 @@
+#!/usr/bin/python
+import getopt
+import pandas as pd
+import random
+import sys
+
+# Define constants
+COMMA = ","
+
+# Initialize options
+cv = False
+ncv = 0
+indstr = ""
+nlearn = 1
+ntest = 1
+nholdout = 0
+rseed = 37
+denom = 0
+by = []
+
+# Define options and arguments
+(opts, argv) = getopt.gnu_getopt(sys.argv[1:], "",
+                                 longopts=["cv=", "indicators=", "rseed=", "nlearn=", "ntest=",
+                                           "nholdout=", "by="])
+for optpair in opts:
+  if optpair[0] == "--by":
+    by = optpair[1].split(sep=COMMA)
+  if optpair[0] == "--cv":
+    cv = True
+    ncv = int(optpair[1])
+  elif optpair[0] == "--rseed":
+    rseed = int(optpair[1])
+  elif optpair[0] == "--indicators":
+    indstr = optpair[1]
+  elif optpair[0] == "--nlearn":
+    nlearn = float(optpair[1])
+  elif optpair[0] == "--ntest":
+    ntest = float(optpair[1])
+  elif optpair[0] == "--nholdout":
+    nholdout = float(optpair[1])
+argc = len(argv)
+if argc < 2:
+  sys.exit()
+
+random.seed = rseed
+if indstr == "":
+  if cv:
+    indicators = ["CVFOLD"]
+  else:
+    indicators = ["SAMPLE"]
+else:
+  indicators = indstr.split(sep=COMMA)
+if cv:
+  nlearn = 0
+  ntest = 0
+  nholdout = 0
+else:
+  denom = nlearn + ntest + nholdout
+nind = len(indicators)
+
+infile = argv[0]
+outfile = argv[1]
+
+df = pd.read_csv(infile)
+row_labels = df.index
+nrows = len(row_labels)
+nlearntest = nlearn + ntest
+sortkeys = by.copy()
+sortkeys.append("rsortkey")
+
+for indicator in indicators:
+  rsortkey = dict()
+  for row in row_labels:
+    rsortkey[row] = random.random()
+  dfkeys = df[by].assign(rsortkey = pd.Series(rsortkey))
+  dfkeys.sort_values(by=sortkeys, inplace=True)
+
+  num = 0
+  sample = ""
+  assign = []
+  if cv:
+    denom = ncv
+  for row in range(nrows):
+    if num >= denom:
+      num = 0
+    if cv:
+      assign.append(num + 1)
+    else:
+      if num < nlearn:
+        assign.append("Learn")
+      elif num < nlearntest:
+        assign.append("Test")
+      else:
+        assign.append("Holdout")
+    num = num + 1
+  dfkeys[indicator] = assign
+  dfkeys.sort_index(inplace=True)
+  df[indicator] = dfkeys[indicator]
+
+df.to_csv(outfile, index=False)
