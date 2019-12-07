@@ -42,7 +42,6 @@ argc = len(argv)
 if argc < 2:
   sys.exit()
 
-random.seed = rseed
 if indstr == "":
   if cv:
     indicators = ["CVFOLD"]
@@ -68,6 +67,7 @@ nrows = len(row_labels)
 nlearntest = nlearn + ntest
 sortkeys = by.copy()
 sortkeys.append(".rsortkey")
+random.seed(rseed)
 
 # We only have to generate the assignments list once
 # Then we simply add it to the randomized key data frame and restore the original order
@@ -91,9 +91,9 @@ for row in range(nrows):
 for indicator in indicators:
   rsortkey = dict()
   for row in row_labels:
-    rsortkey[row] = random.random()
+    rsortkey[row] = random.uniform(0,1)
   dfkeys = df[by].copy()
-  dfkeys[".rsortkey"] = rsortkey
+  dfkeys[".rsortkey"] = pd.Series(rsortkey)
   dfkeys.sort_values(by=sortkeys, inplace=True)
 
   dfkeys[indicator] = assign
