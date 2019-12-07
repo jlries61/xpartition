@@ -67,7 +67,7 @@ row_labels = df.index
 nrows = len(row_labels)
 nlearntest = nlearn + ntest
 sortkeys = by.copy()
-sortkeys.append("rsortkey")
+sortkeys.append(".rsortkey")
 
 # We only have to generate the assignments list once
 # Then we simply add it to the randomized key data frame and restore the original order
@@ -92,7 +92,8 @@ for indicator in indicators:
   rsortkey = dict()
   for row in row_labels:
     rsortkey[row] = random.random()
-  dfkeys = df[by].assign(rsortkey = pd.Series(rsortkey))
+  dfkeys = df[by].copy()
+  dfkeys[".rsortkey"] = rsortkey
   dfkeys.sort_values(by=sortkeys, inplace=True)
 
   dfkeys[indicator] = assign
