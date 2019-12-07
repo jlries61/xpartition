@@ -69,6 +69,25 @@ nlearntest = nlearn + ntest
 sortkeys = by.copy()
 sortkeys.append("rsortkey")
 
+# We only have to generate the assignments list once
+# Then we simply add it to the randomized key data frame and restore the original order
+# at each iteration
+assign = []
+num = 0
+for row in range(nrows):
+  if num >= denom:
+    num = 0
+  if cv:
+    assign.append(num + 1)
+  else:
+    if num < nlearn:
+      assign.append("Learn")
+    elif num < nlearntest:
+      assign.append("Test")
+    else:
+      assign.append("Holdout")
+  num = num + 1
+
 for indicator in indicators:
   rsortkey = dict()
   for row in row_labels:
@@ -76,22 +95,6 @@ for indicator in indicators:
   dfkeys = df[by].assign(rsortkey = pd.Series(rsortkey))
   dfkeys.sort_values(by=sortkeys, inplace=True)
 
-  num = 0
-  sample = ""
-  assign = []
-  for row in range(nrows):
-    if num >= denom:
-      num = 0
-    if cv:
-      assign.append(num + 1)
-    else:
-      if num < nlearn:
-        assign.append("Learn")
-      elif num < nlearntest:
-        assign.append("Test")
-      else:
-        assign.append("Holdout")
-    num = num + 1
   dfkeys[indicator] = assign
   dfkeys.sort_index(inplace=True)
   df[indicator] = dfkeys[indicator]
