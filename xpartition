@@ -54,6 +54,7 @@ if cv:
   nlearn = 0
   ntest = 0
   nholdout = 0
+  denom = ncv
 else:
   denom = nlearn + ntest + nholdout
 nind = len(indicators)
@@ -78,8 +79,6 @@ for indicator in indicators:
   num = 0
   sample = ""
   assign = []
-  if cv:
-    denom = ncv
   for row in range(nrows):
     if num >= denom:
       num = 0
