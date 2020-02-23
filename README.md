@@ -17,6 +17,7 @@ All but Pandas should be installed by default, but all can be installed with one
 ```
 $ pip3 install --user pandas
 ```
+
 If you are running under Linux, chances are excellent that your distribution provides a Pandas package.  Check for it.
 
 ## What it does
@@ -54,7 +55,7 @@ We tabulate `SAMPLE` on `bpart2.csv` and get:
 This time, `xpartition` assigns one record to the test sample for every four assigned to the learning sample.  Because 506 is not divisible by 5, there are not exactly four times as many learning sample records as test sample records, but the algorithm for making the assignments is exactly the same as before, guaranteeing as close to exact proportions as the numbers will permit.
 
 When building CART, MARS, or TreeNet models, Salford Predictive Modeler (SPM) usually uses a test sample to "prune" a maximal model built on the learning sample in such a way that accuracy on the test sample is maximized.  But to measure model performance on completely independent data, one can also specify a holdout sample.  To do that in `xpartition`, specify the `--nholdout` flag, like so:
-````
+```
 xpartition --nlearn=2 --ntest=1 --nholdout=1 BOSTON.CSV bpart3.csv
 ```
 This time, one record each is assigned to the test and holdout samples for every two assigned to the learning sample.  `SAMPLE` tabulates as follows:
