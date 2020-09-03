@@ -1,4 +1,16 @@
 #!/usr/bin/python
+# Copyright (C) 2019-2020 John Leslie Ries
+# This script is free software.  You may copy it with or without modifications under the terms of the
+# GNU General Public License, version 3; or at your option, any later version.
+
+# This script is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this script.  If not, see <https://www.gnu.org/licenses/>.
+
 import getopt
 import pandas as pd
 import random
@@ -18,6 +30,8 @@ rseed = 37
 denom = 0
 by = []
 himem = False
+infile = sys.stdin
+outfile = sys.stdout
 
 # Define options and arguments
 (opts, argv) = getopt.gnu_getopt(sys.argv[1:], "",
@@ -41,9 +55,13 @@ for optpair in opts:
     ntest = float(optpair[1])
   elif optpair[0] == "--nholdout":
     nholdout = float(optpair[1])
+
 argc = len(argv)
-if argc < 2:
-  sys.exit()
+if argc > 0:
+  infile = argv[0]
+if argc > 1:
+  output = argv[1]
+
 lowmem = not himem
 
 if indstr == "":
@@ -53,6 +71,7 @@ if indstr == "":
     indicators = ["SAMPLE"]
 else:
   indicators = indstr.split(sep=COMMA)
+
 if cv:
   nlearn = 0
   ntest = 0
@@ -61,9 +80,6 @@ if cv:
 else:
   denom = nlearn + ntest + nholdout
 nind = len(indicators)
-
-infile = argv[0]
-outfile = argv[1]
 
 df = pd.read_csv(infile, low_memory=lowmem)
 row_labels = df.index
