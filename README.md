@@ -26,7 +26,7 @@ Consider a data table in CSV format with an arbitrary number of records.  `xpart
 ```
 $ xpartition BOSTON.CSV bpart.csv
 ```
-The output data set, `bpart.csv`, would contain all of the fields of the input data set (BOSTON.CSV), plus a new one, `SAMPLE`, with two possible values: "Learn", if the record is part of the learning sample, and "Test" if it is to be part of the test sample.  A tabulation using [Salford Predictive Modeler](https://www.salford-systems.com/SPM) will show the numbers of records assigned to each to be exactltly equal:
+The output data set, `bpart.csv`, would contain all of the fields of the input data set (BOSTON.CSV), plus a new one, `SAMPLE`, with two possible values: "Learn", if the record is part of the learning sample, and "Test" if it is to be part of the test sample.  A tabulation using [Salford Predictive Modeler](https://www.salford-systems.com/SPM) will show the numbers of records assigned to each to be exactly equal:
 ```
 SAMPLE$                                       N      %  Cum %     Wgt Count      %  Cum %
  -----------------------------------------------------------------------------------------
