@@ -92,3 +92,58 @@ In this case, the shuffled records are assigned alternately to ten folds, repeat
  Total                          506        100.00           506        100.00
 ```
 
+### Pipeline Mode
+
+In addition to allowing the input and output data sets to be specified on the command line, `xpartition` can also read the input data from standard input and write the output data to standard output.  This is what will happen if there are no command line arguments.  If there is only one argument, it will be taken as the name of the input file and the output will be written to standard output.
+
+### A Question of Balance
+
+When preparing data for predictive modeling, it is usually a good idea to draw the samples in such a way that at least the dependent variable has as close as possible to the same distribution in each.  There may be other variables in the dataset for which this is particularly important.  `xpartition` supports this effort through the `--by` flag, which specifies a list of fields on which to balance.  These fields may be either categorical or continuous.  Either way, the records are first shuffled as before, and then sorted on the fields to be used for balancing before the partitioning is done.  Then, as usual, the records are returned to their original order.
+
+The Boston housing dataset we have been using has a continuous target (`MV`), but we can still balance on it so that as much as possible, the distribution of MV is the same in both the learning and test samples.
+```
+xpartition --by=MV --nlearn=4 --ntest=1 BOSTON.CSV bosbal.csv
+```
+
+We then compute the descriptive statistics for `MV`, stratifying on `SAMPLE` and get:
+```
+ ============
+ Variable: MV
+ ============
+
+
+ For Stratum: SAMPLE$ = "Learn"
+
+                               Moments
+
+ N                            405    Sum of Weights            405.00
+ Mean                    22.50272    Sum                   9113.60000
+ Std Deviation            9.19721    Variance                84.58858
+ Skewness                 1.09668    Kurtosis                 1.47186
+ Coeff Variation          0.40872    Std Error Mean           0.45701
+ Cond. Mean              22.50272    N missing                      0
+ N = 0                          0    N != 0                       405
+```
+```
+ ============
+ Variable: MV
+ ============
+
+
+ For Stratum: SAMPLE$ = "Test"
+
+                               Moments
+
+ N                            101    Sum of Weights            101.00
+ Mean                    22.65347    Sum                   2288.00000
+ Std Deviation            9.24158    Variance                85.40671
+ Skewness                 1.13758    Kurtosis                 1.45401
+ Coeff Variation          0.40795    Std Error Mean           0.91957
+ Cond. Mean              22.65347    N missing                      0
+ N = 0                          0    N != 0                       101
+```
+
+But balancing becomes more important if the dependent variable is categorical.  We can partition the Dorian Pyle credit data on its usual dependent variable (`BUYER`), like so:
+```
+xpartition --by=BUYER CREDIT.CSV credpart1.csv
+```
