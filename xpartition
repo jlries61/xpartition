@@ -60,7 +60,7 @@ argc = len(argv)
 if argc > 0:
   infile = argv[0]
 if argc > 1:
-  output = argv[1]
+  outfile = argv[1]
 
 lowmem = not himem
 
