@@ -147,3 +147,85 @@ But balancing becomes more important if the dependent variable is categorical.  
 ```
 xpartition --by=BUYER CREDIT.CSV credpart1.csv
 ```
+
+## Package Usage
+
+`xpartition` can also be used directly as a Python package, allowing you to partition a pandas DataFrame from within your own Python code.
+
+### Installation
+
+Place the `xpartition` directory (which contains `__init__.py`) somewhere on your Python path.
+
+### Importing
+
+```python
+from xpartition import xpartition
+```
+
+### Function Signature
+
+```python
+xpartition(df, by=None, rseed=37, indicators=None, nlearn=1, ntest=1, nholdout=0, cv=0)
+```
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `df` | `pandas.DataFrame` | *(required)* | Input data frame to partition |
+| `by` | list of str | `None` | Column names to balance on before partitioning |
+| `rseed` | int | `37` | Random seed for reproducibility |
+| `indicators` | list of str | `None` | Names for the indicator column(s); defaults to `["SAMPLE"]` or `["CVFOLD"]` when `cv > 0` |
+| `nlearn` | float | `1` | Relative size of the learning sample |
+| `ntest` | float | `1` | Relative size of the test sample |
+| `nholdout` | float | `0` | Relative size of the holdout sample |
+| `cv` | int | `0` | Number of cross-validation folds; when greater than 0, CV mode is used instead of learn/test/holdout |
+
+### Return Value
+
+Returns a new `pandas.DataFrame` (the original is not modified) that contains all columns of the input data frame plus the indicator column(s).
+
+### Examples
+
+**Equal-sized learning and test samples:**
+
+```python
+import pandas as pd
+from xpartition import xpartition
+
+df = pd.read_csv("BOSTON.CSV")
+df_partitioned = xpartition(df)
+# df_partitioned now has a "SAMPLE" column with values "Learn" or "Test"
+```
+
+**80/20 train/test split:**
+
+```python
+df_partitioned = xpartition(df, nlearn=4, ntest=1)
+```
+
+**Learning, test, and holdout samples:**
+
+```python
+df_partitioned = xpartition(df, nlearn=2, ntest=1, nholdout=1)
+# "SAMPLE" values: "Learn", "Test", or "Holdout"
+```
+
+**Ten cross-validation folds:**
+
+```python
+df_partitioned = xpartition(df, cv=10)
+# "CVFOLD" column contains integers 1–10
+```
+
+**Balanced partition on a target variable:**
+
+```python
+df_partitioned = xpartition(df, by=["MV"], nlearn=4, ntest=1)
+```
+
+**Custom indicator column name:**
+
+```python
+df_partitioned = xpartition(df, indicators=["PARTITION"])
+```
