@@ -18,6 +18,11 @@ pip install .[test]
 pytest
 ```
 
+`pytest` tests the `src/` working tree directly (configured via
+`pythonpath` in `pyproject.toml`), so edits are picked up without
+reinstalling. For day-to-day development an editable install is
+recommended: `pip install -e .[test]`.
+
 CI (GitHub Actions) runs the same suite on push, along with a
 distribution build check.
 

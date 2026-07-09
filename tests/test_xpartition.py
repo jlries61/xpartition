@@ -2,6 +2,7 @@
 # Tests for the xpartition package. Distributed under the terms of the
 # GNU General Public License, version 3 or later; see LICENSE.
 
+import os
 import subprocess
 import sys
 
@@ -9,6 +10,11 @@ import pandas as pd
 import pytest
 
 from xpartition import xpartition
+
+# Run the CLI subprocess against the src/ working tree (same code the
+# in-process tests import via pytest's pythonpath), not whatever copy of
+# the package happens to be installed.
+SRC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")
 
 
 @pytest.fixture
@@ -89,8 +95,10 @@ def test_row_order_and_data_preserved(df):
 
 
 def run_cli(*args, stdin=None):
+    env = dict(os.environ)
+    env["PYTHONPATH"] = SRC_DIR + os.pathsep + env.get("PYTHONPATH", "")
     return subprocess.run([sys.executable, "-m", "xpartition.cli", *args],
-                          capture_output=True, text=True, input=stdin)
+                          capture_output=True, text=True, input=stdin, env=env)
 
 
 def test_cli_partitions_csv(tmp_path, df):
