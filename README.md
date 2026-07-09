@@ -20,6 +20,27 @@ $ pip3 install --user pandas
 
 If you are running under Linux, chances are excellent that your distribution provides a Pandas package.  Check for it.
 
+## Installation
+
+`xpartition` is packaged with standard Python tooling (`pyproject.toml`), so it can be installed with `pip` directly from a clone of this repository:
+
+```
+$ pip install --user .
+```
+
+This installs both the `xpartition` command and the importable `xpartition` Python module.  (The package is not yet available on PyPI.)
+
+### RPM (Fedora and other RPM-based distributions)
+
+To build and install `xpartition` as a regular system package, run the included helper script from a clone of this repository:
+
+```
+$ ./build-rpm.sh
+$ sudo dnf install dist/noarch/xpartition-*.noarch.rpm
+```
+
+The build requires the `rpm-build`, `python3-devel`, and `python3-build` packages.  The resulting RPM installs `/usr/bin/xpartition` and the Python module in the system site-packages directory, with the Pandas dependency handled automatically by `dnf`.
+
 ## What it does
 
 Consider a data table in CSV format with an arbitrary number of records.  `xpartition` will shuffle the records randomly and then systematically assign then to the desired fields in the specified proportions.  The output data set (also in CSV format) will output the input table in the previous order, but including one or more indicator fields, specifying the assignment(s) for each record.  For example, one could partition the Boston Housing data set into learning and test partitions of equal sizes by issuing the following command:
@@ -154,7 +175,7 @@ xpartition --by=BUYER CREDIT.CSV credpart1.csv
 
 ### Installation
 
-Place the `xpartition` directory (which contains `__init__.py`) somewhere on your Python path.
+Install the package as described under [Installation](#installation) above (either `pip install` or the RPM); the module is then importable from any Python session.
 
 ### Importing
 
