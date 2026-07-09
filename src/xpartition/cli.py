@@ -11,122 +11,117 @@
 # You should have received a copy of the GNU General Public License
 # along with this script.  If not, see <https://www.gnu.org/licenses/>.
 
-import getopt
+import argparse
 import importlib.metadata
-import pandas as pd
 import sys
+
+import pandas as pd
+
 from xpartition import xpartition
 
-# Define constants
-COMMA = ","
-
-USAGE = """\
-Usage: xpartition [OPTIONS] [INFILE [OUTFILE]]
-
+DESCRIPTION = """\
 Randomly partition a CSV data table into learning, test, and holdout
 samples, or into cross-validation folds, in exact proportions, optionally
 balanced on one or more fields.  Reads from INFILE (default: standard
 input) and writes the same table, plus one or more partition indicator
-fields, to OUTFILE (default: standard output).
+fields, to OUTFILE (default: standard output)."""
 
-Options:
-  --nlearn=N        Relative size of the learning sample (default: 1)
-  --ntest=N         Relative size of the test sample (default: 1)
-  --nholdout=N      Relative size of the holdout sample (default: 0)
-                    Sizes may be fractional; they are normalized to the
-                    smallest whole-number assignment cycle, so
-                    --nlearn=0.8 --ntest=0.2 is the same as
-                    --nlearn=4 --ntest=1.
-  --cv=K            Assign records to K cross-validation folds instead of
-                    learning/test/holdout samples (default: 0 = off)
-  --by=FIELDS       Comma-separated list of fields to balance the
-                    partitions on
-  --indicators=NAMES
-                    Comma-separated names of the indicator field(s) to add
-                    (default: SAMPLE, or CVFOLD when --cv is used)
-  --rseed=N         Random seed (default: 37)
-  --himem           Read the input without pandas low-memory mode
-  --help            Show this help message and exit
-  --version         Show the version number and exit\
-"""
+EPILOG = """\
+Sample sizes may be fractional; they are normalized to the smallest
+whole-number assignment cycle, so --nlearn=0.8 --ntest=0.2 is the same
+as --nlearn=4 --ntest=1."""
+
+
+class _Parser(argparse.ArgumentParser):
+    """ArgumentParser with the GNU-style two-line error message."""
+
+    def error(self, message):
+        print("xpartition: %s" % message, file=sys.stderr)
+        print("Try 'xpartition --help' for more information.", file=sys.stderr)
+        sys.exit(2)
+
+
+def _nonneg_number(text):
+    try:
+        value = float(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError("expected a number, got %r" % text)
+    if value < 0:
+        raise argparse.ArgumentTypeError("must be non-negative, got %r" % text)
+    return value
+
+
+def _nonneg_int(text):
+    try:
+        value = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError("expected a non-negative integer, got %r" % text)
+    if value < 0:
+        raise argparse.ArgumentTypeError("must be non-negative, got %r" % text)
+    return value
+
+
+def _comma_list(text):
+    return text.split(",")
 
 
 def main():
-    # Initialize options
-    cv = 0
-    indstr = ""
-    nlearn = 1
-    ntest = 1
-    nholdout = 0
-    rseed = 37
-    by = []
-    himem = False
-    proportions_given = False
-    infile = sys.stdin
-    outfile = sys.stdout
+    parser = _Parser(
+        prog="xpartition",
+        usage="xpartition [OPTIONS] [INFILE [OUTFILE]]",
+        description=DESCRIPTION,
+        epilog=EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument("--nlearn", type=_nonneg_number, default=None, metavar="N",
+                        help="relative size of the learning sample (default: 1)")
+    parser.add_argument("--ntest", type=_nonneg_number, default=None, metavar="N",
+                        help="relative size of the test sample (default: 1)")
+    parser.add_argument("--nholdout", type=_nonneg_number, default=None, metavar="N",
+                        help="relative size of the holdout sample (default: 0)")
+    parser.add_argument("--cv", type=_nonneg_int, default=0, metavar="K",
+                        help="assign records to K cross-validation folds instead of "
+                             "learning/test/holdout samples (default: 0 = off)")
+    parser.add_argument("--by", type=_comma_list, default=[], metavar="FIELDS",
+                        help="comma-separated list of fields to balance the partitions on")
+    parser.add_argument("--indicators", type=_comma_list, default=None, metavar="NAMES",
+                        help="comma-separated names of the indicator field(s) to add "
+                             "(default: SAMPLE, or CVFOLD when --cv is used)")
+    parser.add_argument("--rseed", type=int, default=37, metavar="N",
+                        help="random seed (default: 37)")
+    parser.add_argument("--himem", action="store_true",
+                        help="read the input without pandas low-memory mode")
+    parser.add_argument("--version", action="version",
+                        version="xpartition %s" % importlib.metadata.version("xpartition"))
+    parser.add_argument("infile", nargs="?", default=None, metavar="INFILE",
+                        help="input CSV file (default: standard input)")
+    parser.add_argument("outfile", nargs="?", default=None, metavar="OUTFILE",
+                        help="output CSV file (default: standard output)")
+    args = parser.parse_args()
 
-    # Define options and arguments
-    try:
-        (opts, argv) = getopt.gnu_getopt(sys.argv[1:], "",
-                                         longopts=["cv=", "indicators=", "rseed=", "nlearn=",
-                                                   "ntest=", "nholdout=", "by=", "himem", "help",
-                                                   "version"])
-    except getopt.GetoptError as err:
-        print("xpartition: %s" % err, file=sys.stderr)
-        print("Try 'xpartition --help' for more information.", file=sys.stderr)
-        sys.exit(2)
-    for optpair in opts:
-        if optpair[0] == "--help":
-            print(USAGE)
-            sys.exit(0)
-        elif optpair[0] == "--version":
-            print("xpartition %s" % importlib.metadata.version("xpartition"))
-            sys.exit(0)
-        elif optpair[0] == "--by":
-            by = optpair[1].split(sep=COMMA)
-        elif optpair[0] == "--cv":
-            cv = int(optpair[1])
-        elif optpair[0] == "--himem":
-            himem = True
-        elif optpair[0] == "--rseed":
-            rseed = int(optpair[1])
-        elif optpair[0] == "--indicators":
-            indstr = optpair[1]
-        elif optpair[0] == "--nlearn":
-            nlearn = float(optpair[1])
-            proportions_given = True
-        elif optpair[0] == "--ntest":
-            ntest = float(optpair[1])
-            proportions_given = True
-        elif optpair[0] == "--nholdout":
-            nholdout = float(optpair[1])
-            proportions_given = True
-
-    if cv > 0 and proportions_given:
+    if args.cv > 0 and any(size is not None
+                           for size in (args.nlearn, args.ntest, args.nholdout)):
         print("xpartition: --cv given; --nlearn, --ntest, and --nholdout are ignored",
               file=sys.stderr)
+    nlearn = 1 if args.nlearn is None else args.nlearn
+    ntest = 1 if args.ntest is None else args.ntest
+    nholdout = 0 if args.nholdout is None else args.nholdout
 
-    argc = len(argv)
-    if argc > 0:
-        infile = argv[0]
-    if argc > 1:
-        outfile = argv[1]
-
-    lowmem = not himem
-
-    # Prepare indicators list
-    if indstr == "":
-        indicators = None  # Let xpartition function use its defaults
-    else:
-        indicators = indstr.split(sep=COMMA)
+    infile = args.infile if args.infile is not None else sys.stdin
+    outfile = args.outfile if args.outfile is not None else sys.stdout
 
     # Read input data
-    df = pd.read_csv(infile, low_memory=lowmem)
+    try:
+        df = pd.read_csv(infile, low_memory=not args.himem)
+    except (OSError, ValueError) as err:
+        name = args.infile if args.infile is not None else "standard input"
+        print("xpartition: cannot read %s: %s" % (name, err), file=sys.stderr)
+        sys.exit(1)
 
     # Call xpartition function
     try:
-        df = xpartition(df, by=by, rseed=rseed, indicators=indicators,
-                        nlearn=nlearn, ntest=ntest, nholdout=nholdout, cv=cv)
+        df = xpartition(df, by=args.by, rseed=args.rseed, indicators=args.indicators,
+                        nlearn=nlearn, ntest=ntest, nholdout=nholdout, cv=args.cv)
     except ValueError as err:
         print("xpartition: %s" % err, file=sys.stderr)
         print("Try 'xpartition --help' for more information.", file=sys.stderr)

@@ -118,7 +118,6 @@ def xpartition(df, by=None, rseed=37, indicators=None, nlearn=1, ntest=1, nholdo
     # Determine partitioning mode
     if cv > 0:
         denom = cv
-        ncv = cv
     else:
         denom = nlearn + ntest + nholdout
     

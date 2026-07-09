@@ -211,7 +211,21 @@ def test_cli_stdin_stdout(df):
 def test_cli_help():
     result = run_cli("--help")
     assert result.returncode == 0
-    assert result.stdout.startswith("Usage: xpartition")
+    assert result.stdout.startswith("usage: xpartition")
+
+
+def test_cli_bad_numeric_option_value():
+    result = run_cli("--cv=ten")
+    assert result.returncode == 2
+    assert "cv" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_cli_unreadable_input_file():
+    result = run_cli("/nonexistent/input.csv")
+    assert result.returncode == 1
+    assert "cannot read" in result.stderr
+    assert "Traceback" not in result.stderr
 
 
 def test_cli_version():
