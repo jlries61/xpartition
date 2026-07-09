@@ -132,7 +132,7 @@ In addition to allowing the input and output data sets to be specified on the co
 
 ### A Question of Balance
 
-When preparing data for predictive modeling, it is usually a good idea to draw the samples in such a way that at least the dependent variable has as close as possible to the same distribution in each.  There may be other variables in the dataset for which this is particularly important.  `xpartition` supports this effort through the `--by` flag, which specifies a list of fields on which to balance.  These fields may be either categorical or continuous.  Either way, the records are first shuffled as before, and then sorted on the fields to be used for balancing before the partitioning is done.  Then, as usual, the records are returned to their original order.
+When preparing data for predictive modeling, it is usually a good idea to draw the samples in such a way that at least the dependent variable is as close as possible to the same distribution in each.  There may be other variables in the dataset for which this is particularly important.  `xpartition` supports this effort through the `--by` flag, which specifies a list of fields on which to balance.  These fields may be either categorical or continuous.  Either way, the records are first shuffled as before, and then sorted on the fields to be used for balancing before the partitioning is done.  Then, as usual, the records are returned to their original order.
 
 The Boston housing dataset we have been using has a continuous target (`MV`), but we can still balance on it so that as much as possible, the distribution of MV is the same in both the learning and test samples.
 
