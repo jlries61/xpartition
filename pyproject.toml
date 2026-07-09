@@ -12,7 +12,7 @@ license-files = ["LICENSE"]
 authors = [
     { name = "John L. Ries", email = "john@theyarnbard.com" },
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "pandas",
 ]

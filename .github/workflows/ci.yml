@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.13"]
+        python-version: ["3.9", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -35,3 +35,15 @@ jobs:
         run: |
           pip install twine
           twine check dist/*
+
+  version-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: pyproject.toml and xpartition.spec must agree on the version
+        run: |
+          py=$(grep -Po '^version\s*=\s*"\K[^"]+' pyproject.toml)
+          rpm=$(grep -Po '^Version:\s*\K\S+' xpartition.spec)
+          echo "pyproject.toml: $py"
+          echo "xpartition.spec: $rpm"
+          test "$py" = "$rpm"
