@@ -190,7 +190,7 @@ xpartition --by=BUYER CREDIT.CSV credpart1.csv
 
 `xpartition` can also be used directly as a Python package, allowing you to partition a pandas DataFrame from within your own Python code.
 
-### Installation
+### Installing the package
 
 Install the package as described under [Installation](#installation) above (either `pip install` or the RPM); the module is then importable from any Python session.
 
