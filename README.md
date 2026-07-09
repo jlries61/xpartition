@@ -28,7 +28,7 @@ If you are running under Linux, chances are excellent that your distribution pro
 $ pip install --user .
 ```
 
-This installs both the `xpartition` command and the importable `xpartition` Python module.  (The package is not yet available on PyPI.)
+This installs both the `xpartition` command and the importable `xpartition` Python module.  (The package is not yet available on PyPI due to a naming conflict.)
 
 ### RPM (Fedora and other RPM-based distributions)
 
