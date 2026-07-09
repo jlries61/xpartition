@@ -2,6 +2,7 @@
 # Tests for the xpartition package. Distributed under the terms of the
 # GNU General Public License, version 3 or later; see LICENSE.
 
+import io
 import os
 import subprocess
 import sys
@@ -94,9 +95,33 @@ def test_row_order_and_data_preserved(df):
     pd.testing.assert_frame_equal(out.drop(columns=["SAMPLE"]), df)
 
 
-def test_fractional_proportions_rejected(df):
-    with pytest.raises(ValueError, match="nlearn"):
-        xpartition(df, nlearn=0.8, ntest=0.2)
+def test_fractional_proportions_normalized(df):
+    out = xpartition(df, nlearn=0.8, ntest=0.2)
+    counts = out["SAMPLE"].value_counts()
+    assert counts["Learn"] == 80
+    assert counts["Test"] == 20
+
+
+def test_fractional_three_way_split_normalized(df):
+    out = xpartition(df, nlearn=0.5, ntest=0.25, nholdout=0.25)
+    counts = out["SAMPLE"].value_counts()
+    assert counts["Learn"] == 50
+    assert counts["Test"] == 25
+    assert counts["Holdout"] == 25
+
+
+def test_fractions_equivalent_to_integer_ratio(df):
+    frac = xpartition(df, nlearn=0.8, ntest=0.2)
+    ints = xpartition(df, nlearn=4, ntest=1)
+    assert frac["SAMPLE"].equals(ints["SAMPLE"])
+
+
+def test_repeating_decimal_fraction_normalized(df):
+    out = xpartition(df, nlearn=1 / 3, ntest=2 / 3)
+    counts = out["SAMPLE"].value_counts()
+    # cycle is Learn,Test,Test over 100 rows
+    assert counts["Learn"] == 34
+    assert counts["Test"] == 66
 
 
 def test_all_zero_proportions_rejected(df):
@@ -169,8 +194,17 @@ def test_cli_version():
     assert result.stdout.startswith("xpartition ")
 
 
-def test_cli_rejects_fractional_nlearn(df):
+def test_cli_fractional_proportions(df):
     result = run_cli("--nlearn=0.8", "--ntest=0.2", stdin=df.to_csv(index=False))
+    assert result.returncode == 0
+    out = pd.read_csv(io.StringIO(result.stdout))
+    counts = out["SAMPLE"].value_counts()
+    assert counts["Learn"] == 80
+    assert counts["Test"] == 20
+
+
+def test_cli_rejects_negative_nlearn(df):
+    result = run_cli("--nlearn=-1", stdin=df.to_csv(index=False))
     assert result.returncode == 2
     assert "nlearn" in result.stderr
     assert "Traceback" not in result.stderr

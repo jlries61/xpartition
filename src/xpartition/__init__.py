@@ -11,8 +11,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this script.  If not, see <https://www.gnu.org/licenses/>.
 
-import pandas as pd
+import math
 import random
+from fractions import Fraction
+
+import pandas as pd
 
 
 def _count(name, value):
@@ -24,6 +27,32 @@ def _count(name, value):
     if ivalue != value or ivalue < 0:
         raise ValueError("%s must be a non-negative integer, got %r" % (name, value))
     return ivalue
+
+
+def _normalize_counts(nlearn, ntest, nholdout):
+    """Reduce possibly-fractional sample sizes to the smallest whole-number cycle.
+
+    Fractions and integers alike are treated as relative proportions, so
+    nlearn=0.8, ntest=0.2 becomes the cycle 4:1 and nlearn=2, ntest=1,
+    nholdout=1 stays 2:1:1.  Float imprecision is absorbed by snapping to
+    the nearest rational with denominator <= 10**6 (so 1/3 really means
+    one third).
+    """
+    fracs = []
+    for name, value in (("nlearn", nlearn), ("ntest", ntest), ("nholdout", nholdout)):
+        try:
+            frac = Fraction(value).limit_denominator(1000000)
+        except (TypeError, ValueError):
+            raise ValueError("%s must be a non-negative number, got %r" % (name, value))
+        if frac < 0:
+            raise ValueError("%s must be a non-negative number, got %r" % (name, value))
+        fracs.append(frac)
+    if sum(fracs) == 0:
+        raise ValueError("at least one of nlearn, ntest, nholdout must be positive")
+    denom_lcm = math.lcm(*(frac.denominator for frac in fracs))
+    counts = [int(frac * denom_lcm) for frac in fracs]
+    divisor = math.gcd(*counts)
+    return [count // divisor for count in counts]
 
 
 def xpartition(df, by=None, rseed=37, indicators=None, nlearn=1, ntest=1, nholdout=0, cv=0):
@@ -41,13 +70,15 @@ def xpartition(df, by=None, rseed=37, indicators=None, nlearn=1, ntest=1, nholdo
     indicators : list of str, optional
         List of column names to create for partition indicators. 
         Default is ["CVFOLD"] if cv > 0, otherwise ["SAMPLE"].
-    nlearn : int, optional
-        Learning-sample records per assignment cycle (non-negative integer;
-        integral floats such as 4.0 are accepted). Default is 1.
-    ntest : int, optional
-        Test-sample records per assignment cycle. Default is 1.
-    nholdout : int, optional
-        Holdout-sample records per assignment cycle. Default is 0.
+    nlearn : int or float, optional
+        Relative size of the learning sample. Fractions are allowed and are
+        normalized with the other sizes to the smallest whole-number
+        assignment cycle (nlearn=0.8, ntest=0.2 is the same as nlearn=4,
+        ntest=1). Default is 1.
+    ntest : int or float, optional
+        Relative size of the test sample. Default is 1.
+    nholdout : int or float, optional
+        Relative size of the holdout sample. Default is 0.
     cv : int, optional
         Number of cross-validation folds. If > 0, enables CV mode and
         nlearn/ntest/nholdout are ignored. Default is 0.
@@ -60,17 +91,14 @@ def xpartition(df, by=None, rseed=37, indicators=None, nlearn=1, ntest=1, nholdo
     Raises
     ------
     ValueError
-        If any count is negative or fractional, if all of nlearn/ntest/nholdout
-        are zero in sample mode, or if indicators is an empty list.
+        If any size is negative (or cv is negative or fractional), if all of
+        nlearn/ntest/nholdout are zero in sample mode, or if indicators is an
+        empty list.
     """
     # Validate the input contract up front: a silently wrong partition is
     # worse than an error (milestone post-v2.0.0, finding SK-01/SK-04).
-    nlearn = _count("nlearn", nlearn)
-    ntest = _count("ntest", ntest)
-    nholdout = _count("nholdout", nholdout)
+    nlearn, ntest, nholdout = _normalize_counts(nlearn, ntest, nholdout)
     cv = _count("cv", cv)
-    if cv == 0 and nlearn + ntest + nholdout < 1:
-        raise ValueError("at least one of nlearn, ntest, nholdout must be positive")
     if indicators is not None and len(indicators) == 0:
         raise ValueError("indicators must not be empty")
 

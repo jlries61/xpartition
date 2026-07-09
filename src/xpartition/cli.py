@@ -30,9 +30,13 @@ input) and writes the same table, plus one or more partition indicator
 fields, to OUTFILE (default: standard output).
 
 Options:
-  --nlearn=N        Learning-sample records per assignment cycle (default: 1)
-  --ntest=N         Test-sample records per assignment cycle (default: 1)
-  --nholdout=N      Holdout-sample records per assignment cycle (default: 0)
+  --nlearn=N        Relative size of the learning sample (default: 1)
+  --ntest=N         Relative size of the test sample (default: 1)
+  --nholdout=N      Relative size of the holdout sample (default: 0)
+                    Sizes may be fractional; they are normalized to the
+                    smallest whole-number assignment cycle, so
+                    --nlearn=0.8 --ntest=0.2 is the same as
+                    --nlearn=4 --ntest=1.
   --cv=K            Assign records to K cross-validation folds instead of
                     learning/test/holdout samples (default: 0 = off)
   --by=FIELDS       Comma-separated list of fields to balance the
