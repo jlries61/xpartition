@@ -1,5 +1,5 @@
 Name:           xpartition
-Version:        1.0.0
+Version:        2.0.0
 Release:        1%{?dist}
 Summary:        Exact data partitioner for learning, test, and holdout samples
 
@@ -41,5 +41,7 @@ command-line tool and an importable Python module.
 %{_bindir}/xpartition
 
 %changelog
-* Thu Jul 09 2026 John L. Ries <john@theyarnbard.com> - 1.0.0-1
+* Thu Jul 09 2026 John L. Ries <john@theyarnbard.com> - 2.0.0-1
 - Initial RPM packaging
+- Version 2.0.0 marks the conversion from a stand-alone script to an
+  installable Python package; the original script is retroactively 1.0.0
