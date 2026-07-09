@@ -1,5 +1,5 @@
 # xpartition
-Exact Data Partitioner.  Randomly partitions a table into training, test, and holdout partitions, balanced on one or more fields.
+Exact Data Partitioner.  Randomly partitions a table into learning, test, and holdout partitions, balanced on one or more fields.
 
 ## Prerequisites
 `xpartition` is written in [Python](https://www.python.org/) and requires Python 3.  Its only dependency outside the standard library is [pandas](https://pandas.pydata.org/), which is pulled in automatically when installing via `pip` or the RPM as described below.  Only if you intend to run the code directly from a bare clone of this repository do you need to install Pandas yourself:
@@ -33,7 +33,7 @@ The build requires the `rpm-build`, `python3-devel`, and `python3-build` package
 
 ## What it does
 
-Consider a data table in CSV format with an arbitrary number of records.  `xpartition` will shuffle the records randomly and then systematically assign then to the desired fields in the specified proportions.  The output data set (also in CSV format) will output the input table in the previous order, but including one or more indicator fields, specifying the assignment(s) for each record.  For example, one could partition the Boston Housing data set into learning and test partitions of equal sizes by issuing the following command:
+Consider a data table in CSV format with an arbitrary number of records.  `xpartition` will shuffle the records randomly and then systematically assign them to the desired partitions in the specified proportions.  The output data set (also in CSV format) will output the input table in the previous order, but including one or more indicator fields, specifying the assignment(s) for each record.  For example, one could partition the Boston Housing data set into learning and test partitions of equal sizes by issuing the following command:
 
 ```
 $ xpartition BOSTON.CSV bpart.csv
@@ -69,7 +69,7 @@ We tabulate `SAMPLE` on `bpart2.csv` and get:
  Total                                       506        100.00           506        100.00
 ```
 
-This time, `xpartition` assigns one record to the test sample for every four assigned to the learning sample.  Because 506 is not divisible by 5, there are not exactly four times as many learning sample records as test sample records, but the algorithm for making the assignments is exactly the same as before, guaranteeing as close to exact proportions as the numbers will permit.
+This time, `xpartition` assigns one record to the test sample for every four assigned to the learning sample.  Sample sizes may also be given as fractions — they are normalized to the smallest whole-number assignment cycle, so `--nlearn=0.8 --ntest=0.2` is equivalent to `--nlearn=4 --ntest=1`.  Because 506 is not divisible by 5, there are not exactly four times as many learning sample records as test sample records, but the algorithm for making the assignments is exactly the same as before, guaranteeing as close to exact proportions as the numbers will permit.
 
 When building CART, MARS, or TreeNet models, Salford Predictive Modeler (SPM) usually uses a test sample to "prune" a maximal model built on the learning sample in such a way that accuracy on the test sample is maximized.  But to measure model performance on completely independent data, one can also specify a holdout sample.  To do that in `xpartition`, specify the `--nholdout` flag, like so:
 
