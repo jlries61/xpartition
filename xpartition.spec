@@ -23,7 +23,7 @@ command-line tool and an importable Python module.
 %autosetup
 
 %generate_buildrequires
-%pyproject_buildrequires
+%pyproject_buildrequires -x test
 
 %build
 %pyproject_wheel
@@ -34,6 +34,7 @@ command-line tool and an importable Python module.
 
 %check
 %pyproject_check_import
+%pytest
 
 %files -f %{pyproject_files}
 %doc README.md

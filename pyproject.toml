@@ -24,6 +24,9 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 
+[project.optional-dependencies]
+test = ["pytest"]
+
 [project.urls]
 Homepage = "https://github.com/jlries61/xpartition"
 
@@ -32,3 +35,6 @@ xpartition = "xpartition.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
