@@ -46,6 +46,16 @@ git tag -a vX.Y.Z -m "xpartition X.Y.Z"
 git push origin vX.Y.Z
 ```
 
+Pushing the tag triggers the Release workflow (GitHub Actions), which
+builds the sdist and wheel, verifies the tag matches the packaged
+version, and attaches both artifacts to a GitHub Release. The locally
+built RPM is not uploaded automatically; add it to the release by hand
+if desired:
+
+```
+gh release upload vX.Y.Z dist/noarch/xpartition-*.noarch.rpm
+```
+
 ## 5. PyPI (not yet enabled)
 
 The name `xpartition` is taken on PyPI, so the project must be renamed
