@@ -15,6 +15,17 @@ import pandas as pd
 import random
 
 
+def _count(name, value):
+    """Validate a cycle count: must be a non-negative integer (integral floats accepted)."""
+    try:
+        ivalue = int(value)
+    except (TypeError, ValueError):
+        raise ValueError("%s must be a non-negative integer, got %r" % (name, value))
+    if ivalue != value or ivalue < 0:
+        raise ValueError("%s must be a non-negative integer, got %r" % (name, value))
+    return ivalue
+
+
 def xpartition(df, by=None, rseed=37, indicators=None, nlearn=1, ntest=1, nholdout=0, cv=0):
     """
     Partition a dataframe into learning, test, and holdout samples or cross-validation folds.
@@ -30,27 +41,46 @@ def xpartition(df, by=None, rseed=37, indicators=None, nlearn=1, ntest=1, nholdo
     indicators : list of str, optional
         List of column names to create for partition indicators. 
         Default is ["CVFOLD"] if cv > 0, otherwise ["SAMPLE"].
-    nlearn : float, optional
-        Proportion or count for learning sample. Default is 1.
-    ntest : float, optional
-        Proportion or count for test sample. Default is 1.
-    nholdout : float, optional
-        Proportion or count for holdout sample. Default is 0.
+    nlearn : int, optional
+        Learning-sample records per assignment cycle (non-negative integer;
+        integral floats such as 4.0 are accepted). Default is 1.
+    ntest : int, optional
+        Test-sample records per assignment cycle. Default is 1.
+    nholdout : int, optional
+        Holdout-sample records per assignment cycle. Default is 0.
     cv : int, optional
-        Number of cross-validation folds. If > 0, enables CV mode. Default is 0.
-    
+        Number of cross-validation folds. If > 0, enables CV mode and
+        nlearn/ntest/nholdout are ignored. Default is 0.
+
     Returns
     -------
     pandas.DataFrame
         Modified dataframe with partition indicator column(s) added
+
+    Raises
+    ------
+    ValueError
+        If any count is negative or fractional, if all of nlearn/ntest/nholdout
+        are zero in sample mode, or if indicators is an empty list.
     """
+    # Validate the input contract up front: a silently wrong partition is
+    # worse than an error (milestone post-v2.0.0, finding SK-01/SK-04).
+    nlearn = _count("nlearn", nlearn)
+    ntest = _count("ntest", ntest)
+    nholdout = _count("nholdout", nholdout)
+    cv = _count("cv", cv)
+    if cv == 0 and nlearn + ntest + nholdout < 1:
+        raise ValueError("at least one of nlearn, ntest, nholdout must be positive")
+    if indicators is not None and len(indicators) == 0:
+        raise ValueError("indicators must not be empty")
+
     # Make a copy to avoid modifying the original
     df = df.copy()
-    
+
     # Handle default values
     if by is None:
         by = []
-    
+
     if indicators is None:
         if cv > 0:
             indicators = ["CVFOLD"]

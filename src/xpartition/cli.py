@@ -57,6 +57,7 @@ def main():
     rseed = 37
     by = []
     himem = False
+    proportions_given = False
     infile = sys.stdin
     outfile = sys.stdout
 
@@ -89,10 +90,17 @@ def main():
             indstr = optpair[1]
         elif optpair[0] == "--nlearn":
             nlearn = float(optpair[1])
+            proportions_given = True
         elif optpair[0] == "--ntest":
             ntest = float(optpair[1])
+            proportions_given = True
         elif optpair[0] == "--nholdout":
             nholdout = float(optpair[1])
+            proportions_given = True
+
+    if cv > 0 and proportions_given:
+        print("xpartition: --cv given; --nlearn, --ntest, and --nholdout are ignored",
+              file=sys.stderr)
 
     argc = len(argv)
     if argc > 0:
@@ -112,8 +120,13 @@ def main():
     df = pd.read_csv(infile, low_memory=lowmem)
 
     # Call xpartition function
-    df = xpartition(df, by=by, rseed=rseed, indicators=indicators,
-                    nlearn=nlearn, ntest=ntest, nholdout=nholdout, cv=cv)
+    try:
+        df = xpartition(df, by=by, rseed=rseed, indicators=indicators,
+                        nlearn=nlearn, ntest=ntest, nholdout=nholdout, cv=cv)
+    except ValueError as err:
+        print("xpartition: %s" % err, file=sys.stderr)
+        print("Try 'xpartition --help' for more information.", file=sys.stderr)
+        sys.exit(2)
 
     # Write output data
     df.to_csv(outfile, index=False)

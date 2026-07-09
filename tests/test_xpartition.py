@@ -94,6 +94,43 @@ def test_row_order_and_data_preserved(df):
     pd.testing.assert_frame_equal(out.drop(columns=["SAMPLE"]), df)
 
 
+def test_fractional_proportions_rejected(df):
+    with pytest.raises(ValueError, match="nlearn"):
+        xpartition(df, nlearn=0.8, ntest=0.2)
+
+
+def test_all_zero_proportions_rejected(df):
+    with pytest.raises(ValueError):
+        xpartition(df, nlearn=0, ntest=0, nholdout=0)
+
+
+def test_negative_proportion_rejected(df):
+    with pytest.raises(ValueError, match="ntest"):
+        xpartition(df, ntest=-1)
+
+
+def test_integral_float_proportions_accepted(df):
+    out = xpartition(df, nlearn=4.0, ntest=1.0)
+    counts = out["SAMPLE"].value_counts()
+    assert counts["Learn"] == 80
+    assert counts["Test"] == 20
+
+
+def test_negative_cv_rejected(df):
+    with pytest.raises(ValueError, match="cv"):
+        xpartition(df, cv=-2)
+
+
+def test_fractional_cv_rejected(df):
+    with pytest.raises(ValueError, match="cv"):
+        xpartition(df, cv=2.5)
+
+
+def test_empty_indicators_rejected(df):
+    with pytest.raises(ValueError, match="indicators"):
+        xpartition(df, indicators=[])
+
+
 def run_cli(*args, stdin=None):
     env = dict(os.environ)
     env["PYTHONPATH"] = SRC_DIR + os.pathsep + env.get("PYTHONPATH", "")
@@ -130,6 +167,19 @@ def test_cli_version():
     result = run_cli("--version")
     assert result.returncode == 0
     assert result.stdout.startswith("xpartition ")
+
+
+def test_cli_rejects_fractional_nlearn(df):
+    result = run_cli("--nlearn=0.8", "--ntest=0.2", stdin=df.to_csv(index=False))
+    assert result.returncode == 2
+    assert "nlearn" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_cli_warns_when_cv_overrides_proportions(df):
+    result = run_cli("--cv=4", "--nlearn=2", stdin=df.to_csv(index=False))
+    assert result.returncode == 0
+    assert "ignored" in result.stderr
 
 
 def test_cli_rejects_unknown_option():
