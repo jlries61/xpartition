@@ -127,7 +127,9 @@ def xpartition(df, by=None, rseed=37, indicators=None, nlearn=1, ntest=1, nholdo
     nlearntest = nlearn + ntest
     sortkeys = by.copy()
     sortkeys.append(".rsortkey")
-    random.seed(rseed)
+    # Instance RNG: same Mersenne Twister stream as random.seed()/uniform(),
+    # so assignments are unchanged, but the caller's global RNG state is not.
+    rng = random.Random(rseed)
     
     # Generate the assignments list once
     assign = []
@@ -150,7 +152,7 @@ def xpartition(df, by=None, rseed=37, indicators=None, nlearn=1, ntest=1, nholdo
     for indicator in indicators:
         rsortkey = dict()
         for row in row_labels:
-            rsortkey[row] = random.uniform(0, 1)
+            rsortkey[row] = rng.uniform(0, 1)
         dfkeys = df[by].copy() if by else pd.DataFrame(index=df.index)
         dfkeys[".rsortkey"] = pd.Series(rsortkey)
         dfkeys.sort_values(by=sortkeys, inplace=True)

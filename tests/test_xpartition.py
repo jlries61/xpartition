@@ -156,6 +156,32 @@ def test_empty_indicators_rejected(df):
         xpartition(df, indicators=[])
 
 
+def test_pinned_assignments_for_fixed_seed():
+    """Regression pin: exact assignments for a fixed frame and seed.
+
+    Guards against unintended changes to the RNG stream or the
+    assignment algorithm. If this fails, partition output has changed
+    for every user — that must be a deliberate, versioned decision.
+    """
+    frame = pd.DataFrame({"X": range(10)})
+    out = xpartition(frame, rseed=37)
+    assert list(out["SAMPLE"]) == [
+        "Test", "Learn", "Test", "Test", "Learn",
+        "Test", "Learn", "Learn", "Learn", "Test",
+    ]
+
+
+def test_global_random_state_untouched(df):
+    """Calling xpartition() must not reseed the caller's global RNG."""
+    import random
+    random.seed(12345)
+    expected = [random.random() for _ in range(3)]
+    random.seed(12345)
+    xpartition(df)
+    observed = [random.random() for _ in range(3)]
+    assert observed == expected
+
+
 def run_cli(*args, stdin=None):
     env = dict(os.environ)
     env["PYTHONPATH"] = SRC_DIR + os.pathsep + env.get("PYTHONPATH", "")
