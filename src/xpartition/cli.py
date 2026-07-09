@@ -19,6 +19,31 @@ from xpartition import xpartition
 # Define constants
 COMMA = ","
 
+USAGE = """\
+Usage: xpartition [OPTIONS] [INFILE [OUTFILE]]
+
+Randomly partition a CSV data table into learning, test, and holdout
+samples, or into cross-validation folds, in exact proportions, optionally
+balanced on one or more fields.  Reads from INFILE (default: standard
+input) and writes the same table, plus one or more partition indicator
+fields, to OUTFILE (default: standard output).
+
+Options:
+  --nlearn=N        Learning-sample records per assignment cycle (default: 1)
+  --ntest=N         Test-sample records per assignment cycle (default: 1)
+  --nholdout=N      Holdout-sample records per assignment cycle (default: 0)
+  --cv=K            Assign records to K cross-validation folds instead of
+                    learning/test/holdout samples (default: 0 = off)
+  --by=FIELDS       Comma-separated list of fields to balance the
+                    partitions on
+  --indicators=NAMES
+                    Comma-separated names of the indicator field(s) to add
+                    (default: SAMPLE, or CVFOLD when --cv is used)
+  --rseed=N         Random seed (default: 37)
+  --himem           Read the input without pandas low-memory mode
+  --help            Show this help message and exit\
+"""
+
 
 def main():
     # Initialize options
@@ -34,11 +59,19 @@ def main():
     outfile = sys.stdout
 
     # Define options and arguments
-    (opts, argv) = getopt.gnu_getopt(sys.argv[1:], "",
-                                     longopts=["cv=", "indicators=", "rseed=", "nlearn=", "ntest=",
-                                               "nholdout=", "by=", "himem"])
+    try:
+        (opts, argv) = getopt.gnu_getopt(sys.argv[1:], "",
+                                         longopts=["cv=", "indicators=", "rseed=", "nlearn=",
+                                                   "ntest=", "nholdout=", "by=", "himem", "help"])
+    except getopt.GetoptError as err:
+        print("xpartition: %s" % err, file=sys.stderr)
+        print("Try 'xpartition --help' for more information.", file=sys.stderr)
+        sys.exit(2)
     for optpair in opts:
-        if optpair[0] == "--by":
+        if optpair[0] == "--help":
+            print(USAGE)
+            sys.exit(0)
+        elif optpair[0] == "--by":
             by = optpair[1].split(sep=COMMA)
         elif optpair[0] == "--cv":
             cv = int(optpair[1])
