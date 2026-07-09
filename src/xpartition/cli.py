@@ -12,6 +12,7 @@
 # along with this script.  If not, see <https://www.gnu.org/licenses/>.
 
 import getopt
+import importlib.metadata
 import pandas as pd
 import sys
 from xpartition import xpartition
@@ -41,7 +42,8 @@ Options:
                     (default: SAMPLE, or CVFOLD when --cv is used)
   --rseed=N         Random seed (default: 37)
   --himem           Read the input without pandas low-memory mode
-  --help            Show this help message and exit\
+  --help            Show this help message and exit
+  --version         Show the version number and exit\
 """
 
 
@@ -62,7 +64,8 @@ def main():
     try:
         (opts, argv) = getopt.gnu_getopt(sys.argv[1:], "",
                                          longopts=["cv=", "indicators=", "rseed=", "nlearn=",
-                                                   "ntest=", "nholdout=", "by=", "himem", "help"])
+                                                   "ntest=", "nholdout=", "by=", "himem", "help",
+                                                   "version"])
     except getopt.GetoptError as err:
         print("xpartition: %s" % err, file=sys.stderr)
         print("Try 'xpartition --help' for more information.", file=sys.stderr)
@@ -70,6 +73,9 @@ def main():
     for optpair in opts:
         if optpair[0] == "--help":
             print(USAGE)
+            sys.exit(0)
+        elif optpair[0] == "--version":
+            print("xpartition %s" % importlib.metadata.version("xpartition"))
             sys.exit(0)
         elif optpair[0] == "--by":
             by = optpair[1].split(sep=COMMA)
