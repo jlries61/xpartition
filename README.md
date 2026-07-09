@@ -2,17 +2,7 @@
 Exact Data Partitioner.  Randomly partitions a table into training, test, and holdout partitions, balanced on one or more fields.
 
 ## Prerequisites
-`xpartition` is a [Python](https://www.python.org/) script, which is only expected to work under Python 3.  The following modules are required:
-
-* [getopt](https://docs.python.org/3/library/getopt.html)
-
-* [pandas](https://pandas.pydata.org/)
-
-* [random](https://docs.python.org/3/library/random.html)
-
-* [sys](https://docs.python.org/3/library/sys.html)
-
-All but Pandas should be installed by default, but all can be installed with one's favorite package manager.  To install Pandas using Python's `pip` utility, type the following at the terminal:
+`xpartition` is written in [Python](https://www.python.org/) and requires Python 3.  Its only dependency outside the standard library is [pandas](https://pandas.pydata.org/), which is pulled in automatically when installing via `pip` or the RPM as described below.  Only if you intend to run the code directly from a bare clone of this repository do you need to install Pandas yourself:
 
 ```
 $ pip3 install --user pandas
