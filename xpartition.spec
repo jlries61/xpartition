@@ -1,5 +1,5 @@
 Name:           xpartition
-Version:        2.0.0
+Version:        2.0.1
 Release:        1%{?dist}
 Summary:        Exact data partitioner for learning, test, and holdout samples
 
@@ -41,6 +41,14 @@ command-line tool and an importable Python module.
 %{_bindir}/xpartition
 
 %changelog
+* Thu Jul 09 2026 John L. Ries <john@theyarnbard.com> - 2.0.1-1
+- Fractional sample sizes, normalized to the smallest whole-number cycle
+- Input validation: invalid or unrealizable proportions now raise clean
+  errors instead of silently producing a wrong partition
+- Library no longer reseeds the global random module (instance RNG)
+- CLI migrated to argparse with clean error messages
+- Indicator-name collisions documented as re-partitioning, with a warning
+
 * Thu Jul 09 2026 John L. Ries <john@theyarnbard.com> - 2.0.0-1
 - Initial RPM packaging
 - Version 2.0.0 marks the conversion from a stand-alone script to an
