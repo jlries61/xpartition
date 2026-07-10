@@ -62,7 +62,7 @@ def _nonneg_int(text):
 
 
 def _comma_list(text):
-    return text.split(",")
+    return [token for token in text.split(",") if token]
 
 
 def main():
@@ -117,6 +117,13 @@ def main():
         name = args.infile if args.infile is not None else "standard input"
         print("xpartition: cannot read %s: %s" % (name, err), file=sys.stderr)
         sys.exit(1)
+
+    missing = [field for field in args.by if field not in df.columns]
+    if missing:
+        print("xpartition: --by field(s) not in the input: %s" % ", ".join(missing),
+              file=sys.stderr)
+        print("Try 'xpartition --help' for more information.", file=sys.stderr)
+        sys.exit(2)
 
     # Call xpartition function
     try:

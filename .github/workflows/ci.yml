@@ -35,6 +35,14 @@ jobs:
         run: |
           pip install twine
           twine check dist/*
+      - name: Smoke-test the built wheel (import + CLI, away from the checkout)
+        run: |
+          pip install dist/*.whl
+          cd /tmp
+          printf 'X\n1\n2\n3\n4\n' | xpartition --cv=2
+          python -c "import xpartition, pandas as pd; \
+            out = xpartition.xpartition(pd.DataFrame({'X': range(4)})); \
+            assert 'SAMPLE' in out.columns"
 
   version-check:
     runs-on: ubuntu-latest

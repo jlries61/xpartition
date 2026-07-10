@@ -42,8 +42,8 @@ def _normalize_counts(nlearn, ntest, nholdout):
     for name, value in (("nlearn", nlearn), ("ntest", ntest), ("nholdout", nholdout)):
         try:
             frac = Fraction(value).limit_denominator(1000000)
-        except (TypeError, ValueError):
-            raise ValueError("%s must be a non-negative number, got %r" % (name, value))
+        except (TypeError, ValueError, OverflowError):
+            raise ValueError("%s must be a finite non-negative number, got %r" % (name, value))
         if frac < 0:
             raise ValueError("%s must be a non-negative number, got %r" % (name, value))
         fracs.append(frac)
@@ -91,9 +91,17 @@ def xpartition(df, by=None, rseed=37, indicators=None, nlearn=1, ntest=1, nholdo
     Raises
     ------
     ValueError
-        If any size is negative (or cv is negative or fractional), if all of
-        nlearn/ntest/nholdout are zero in sample mode, or if indicators is an
-        empty list.
+        If any size is negative or non-finite (or cv is negative or
+        fractional), if all of nlearn/ntest/nholdout are zero in sample mode,
+        if indicators is an empty list, or if the normalized assignment cycle
+        (or cv) is larger than the number of records — proportions that
+        precise cannot be realized on a table that small.
+
+    Notes
+    -----
+    Fractional sizes are snapped to the nearest rational with denominator
+    at most 10**6, so sizes smaller than about 5e-7 of the total are
+    treated as zero.
     """
     # Validate the input contract up front: a silently wrong partition is
     # worse than an error (milestone post-v2.0.0, finding SK-01/SK-04).
@@ -123,6 +131,17 @@ def xpartition(df, by=None, rseed=37, indicators=None, nlearn=1, ntest=1, nholdo
     
     row_labels = df.index
     nrows = len(row_labels)
+    # A cycle longer than the table means the requested proportions cannot be
+    # realized at all (every record would land in the cycle's first segment) —
+    # loud error, not a silently degenerate partition. Empty frames are exempt:
+    # zero rows partition trivially.
+    if cv > 0:
+        if 0 < nrows < cv:
+            raise ValueError("cv (%d) exceeds the number of records (%d)" % (cv, nrows))
+    elif 0 < nrows < denom:
+        raise ValueError(
+            "the requested sample sizes need an assignment cycle of %d records, "
+            "but the table has only %d; use coarser proportions" % (denom, nrows))
     nlearntest = nlearn + ntest
     sortkeys = by.copy()
     sortkeys.append(".rsortkey")

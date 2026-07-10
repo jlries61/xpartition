@@ -156,6 +156,40 @@ def test_empty_indicators_rejected(df):
         xpartition(df, indicators=[])
 
 
+def test_cycle_longer_than_table_rejected(df):
+    # High-precision fractions normalize to a cycle longer than the table;
+    # that must be a loud error, not a silent 100%-Learn partition.
+    with pytest.raises(ValueError, match="cycle"):
+        xpartition(df, nlearn=0.123457, ntest=0.876543)
+    with pytest.raises(ValueError, match="cycle"):
+        xpartition(df, nlearn=199, ntest=301)
+
+
+def test_reducible_integer_ratio_normalized(df):
+    # 200:300 reduces to 2:3 — realizable on 100 rows, not an error.
+    out = xpartition(df, nlearn=200, ntest=300)
+    counts = out["SAMPLE"].value_counts()
+    assert counts["Learn"] == 40
+    assert counts["Test"] == 60
+
+
+def test_cv_exceeding_rows_rejected(df):
+    with pytest.raises(ValueError, match="cv"):
+        xpartition(df, cv=101)
+
+
+def test_infinite_proportion_rejected(df):
+    with pytest.raises(ValueError, match="nlearn"):
+        xpartition(df, nlearn=float("inf"))
+
+
+def test_empty_frame_still_partitions():
+    empty = pd.DataFrame({"X": []})
+    out = xpartition(empty)
+    assert len(out) == 0
+    assert "SAMPLE" in out.columns
+
+
 def test_pinned_assignments_for_fixed_seed():
     """Regression pin: exact assignments for a fixed frame and seed.
 
@@ -241,6 +275,13 @@ def test_cli_fractional_proportions(df):
     counts = out["SAMPLE"].value_counts()
     assert counts["Learn"] == 80
     assert counts["Test"] == 20
+
+
+def test_cli_unknown_by_field(df):
+    result = run_cli("--by=NOSUCH", stdin=df.to_csv(index=False))
+    assert result.returncode == 2
+    assert "NOSUCH" in result.stderr
+    assert "Traceback" not in result.stderr
 
 
 def test_cli_rejects_negative_nlearn(df):
