@@ -167,3 +167,16 @@ dmypy.json
 
 # Audits stay gitignored — often sensitive (vendor names, internal opinions).
 .ssd/audits/
+
+# README-example outputs and local sample data (milestone post-v2.0.0, SK-09).
+# These are regenerated from the commands shown in README.md; Data/ is the
+# maintainer's local sample datasets (BOSTON.CSV etc.), not part of the repo.
+bpart*.csv
+bcv.csv
+bosbal.csv
+credpart*.csv
+README.html
+Data/
+
+# Editor backup files
+*~

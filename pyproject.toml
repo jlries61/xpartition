@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xpartition"
-version = "2.0.0"
+version = "2.0.1"
 description = "Exact data partitioner: split a table into learning, test, and holdout samples or CV folds, balanced on one or more fields"
 readme = "README.md"
 license = "GPL-3.0-or-later"
@@ -12,7 +12,7 @@ license-files = ["LICENSE"]
 authors = [
     { name = "John L. Ries", email = "john@theyarnbard.com" },
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "pandas",
 ]
@@ -38,3 +38,4 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
