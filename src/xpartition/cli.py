@@ -30,7 +30,9 @@ fields, to OUTFILE (default: standard output)."""
 EPILOG = """\
 Sample sizes may be fractional; they are normalized to the smallest
 whole-number assignment cycle, so --nlearn=0.8 --ntest=0.2 is the same
-as --nlearn=4 --ntest=1."""
+as --nlearn=4 --ntest=1.  Prefer small integers: the normalized cycle
+(the sum of the sizes) must fit within the data, and proportions too
+precise to be realized on the table are reported as an error."""
 
 
 class _Parser(argparse.ArgumentParser):

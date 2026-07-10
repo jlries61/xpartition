@@ -100,6 +100,11 @@ def xpartition(df, by=None, rseed=37, indicators=None, nlearn=1, ntest=1, nholdo
 
     Notes
     -----
+    Prefer small integers for the sample sizes: their sum, after
+    normalization, is the length of the assignment cycle, and the cycle
+    must fit within the table — proportions too precise to be realized on
+    the data raise ValueError rather than degrade silently.
+
     Fractional sizes are snapped to the nearest rational with denominator
     at most 10**6, so sizes smaller than about 5e-7 of the total are
     treated as zero.
