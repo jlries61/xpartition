@@ -21,9 +21,9 @@ scope-reconsider threshold.
 
 Residue (explicitly named):
 - **R6:** the release workflow needs one throwaway-tag drill (`git tag v2.0.1-rc1 && git push origin v2.0.1-rc1` on a test basis, then delete) before trust.
-- **QUESTION-1 (code-review):** indicator name colliding with an existing column silently
-  overwrites it (pre-existing). Maintainer decision wanted: document as re-partitioning feature,
-  or reject.
+- **QUESTION-1 / SK-13 — ✅ closed post-verify (R10, `d5244cf`):** maintainer decided it is a
+  feature. Collision now documented (docstring + README) and warned: `UserWarning` in the
+  library, rendered as `xpartition: warning: ...` on stderr by the CLI. 4 new tests.
 - **Deferred by design:** PyPI rename (blocked on naming decision), sort-key vectorization
   (explicitly declined by audit), fractional-support README example expansion beyond the one
   sentence added in R8.
