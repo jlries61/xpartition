@@ -257,3 +257,11 @@ df_partitioned = xpartition(df, by=["MV"], nlearn=4, ntest=1)
 ```python
 df_partitioned = xpartition(df, indicators=["PARTITION"])
 ```
+
+**Re-partitioning:**
+
+If an indicator name matches an existing column — for example, when running
+`xpartition` on output that already contains a `SAMPLE` field — the existing
+column is replaced with fresh assignments, so a second pass (say, with a
+different `--rseed`) re-partitions the data in place. A warning is printed
+to standard error whenever a column is replaced this way.

@@ -14,6 +14,7 @@
 import argparse
 import importlib.metadata
 import sys
+import warnings
 
 import pandas as pd
 
@@ -125,10 +126,14 @@ def main():
         print("Try 'xpartition --help' for more information.", file=sys.stderr)
         sys.exit(2)
 
-    # Call xpartition function
+    # Call xpartition function, rendering library warnings in the CLI's voice
     try:
-        df = xpartition(df, by=args.by, rseed=args.rseed, indicators=args.indicators,
-                        nlearn=nlearn, ntest=ntest, nholdout=nholdout, cv=args.cv)
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            df = xpartition(df, by=args.by, rseed=args.rseed, indicators=args.indicators,
+                            nlearn=nlearn, ntest=ntest, nholdout=nholdout, cv=args.cv)
+        for warning in caught:
+            print("xpartition: warning: %s" % warning.message, file=sys.stderr)
     except ValueError as err:
         print("xpartition: %s" % err, file=sys.stderr)
         print("Try 'xpartition --help' for more information.", file=sys.stderr)

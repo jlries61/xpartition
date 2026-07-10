@@ -6,6 +6,7 @@ import io
 import os
 import subprocess
 import sys
+import warnings
 
 import pandas as pd
 import pytest
@@ -190,6 +191,28 @@ def test_empty_frame_still_partitions():
     assert "SAMPLE" in out.columns
 
 
+def test_indicator_collision_warns_and_overwrites(df):
+    # Re-partitioning already-partitioned output is a feature: the existing
+    # indicator column is replaced, with a warning.
+    first = xpartition(df, rseed=1)
+    with pytest.warns(UserWarning, match="SAMPLE"):
+        second = xpartition(first, rseed=2)
+    assert not second["SAMPLE"].equals(first["SAMPLE"])
+    assert list(second.columns) == list(first.columns)
+
+
+def test_indicator_collision_with_data_column_warns(df):
+    with pytest.warns(UserWarning, match="GROUP"):
+        out = xpartition(df, indicators=["GROUP"])
+    assert set(out["GROUP"]) == {"Learn", "Test"}
+
+
+def test_no_warning_without_collision(df):
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        xpartition(df)
+
+
 def test_pinned_assignments_for_fixed_seed():
     """Regression pin: exact assignments for a fixed frame and seed.
 
@@ -295,6 +318,15 @@ def test_cli_warns_when_cv_overrides_proportions(df):
     result = run_cli("--cv=4", "--nlearn=2", stdin=df.to_csv(index=False))
     assert result.returncode == 0
     assert "ignored" in result.stderr
+
+
+def test_cli_warns_on_indicator_collision(df):
+    once = run_cli(stdin=df.to_csv(index=False))
+    twice = run_cli(stdin=once.stdout)
+    assert twice.returncode == 0
+    assert "warning" in twice.stderr
+    assert "SAMPLE" in twice.stderr
+    assert twice.stdout.splitlines()[0] == "X,GROUP,SAMPLE"
 
 
 def test_cli_rejects_unknown_option():

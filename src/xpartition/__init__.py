@@ -13,6 +13,7 @@
 
 import math
 import random
+import warnings
 from fractions import Fraction
 
 import pandas as pd
@@ -102,6 +103,11 @@ def xpartition(df, by=None, rseed=37, indicators=None, nlearn=1, ntest=1, nholdo
     Fractional sizes are snapped to the nearest rational with denominator
     at most 10**6, so sizes smaller than about 5e-7 of the total are
     treated as zero.
+
+    If an indicator name matches an existing column, that column is
+    replaced with the new assignments — so re-running xpartition on
+    already-partitioned output refreshes the partition. A UserWarning is
+    issued whenever this happens.
     """
     # Validate the input contract up front: a silently wrong partition is
     # worse than an error (milestone post-v2.0.0, finding SK-01/SK-04).
@@ -168,6 +174,11 @@ def xpartition(df, by=None, rseed=37, indicators=None, nlearn=1, ntest=1, nholdo
     
     # Create indicator columns
     for indicator in indicators:
+        if indicator in df.columns:
+            # Replacing an existing column is a feature (re-partitioning
+            # refreshes the assignments) but should never happen silently.
+            warnings.warn("indicator %r replaces an existing column of the same name"
+                          % indicator, UserWarning, stacklevel=2)
         rsortkey = dict()
         for row in row_labels:
             rsortkey[row] = rng.uniform(0, 1)
